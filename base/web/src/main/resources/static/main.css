@@ -1,1 +1,18 @@
 @charset "UTF-8";
+
+
+#viewer {
+	user-select: none;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+}
+
+.viewer-progress {
+	height: 0.2rem;
+}
+
+.viewer-canvas-outer {
+	flex: 1;
+	overflow: hidden;
+}

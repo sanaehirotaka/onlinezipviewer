@@ -30,6 +30,13 @@ class Book {
         return book;
     }
 
+    static async fromBlob(blob, name) {
+        let book = new Book();
+        book.name = name;
+        book.content = Tools.fileToUint8Array(blob);
+        return book;
+    }
+
     async open() {
         this.unzip = new Zlib.Unzip(this.content);
         this.files = this.unzip.getFilenames();
@@ -299,7 +306,7 @@ class UI {
             search: { smart : false },
             columns: [
                 { data: "realName", render: val => {
-                    return `<button class="btn btn-primary" data-val="${val}">開く</button>`
+                    return `<button class="btn btn-primary" data-bs-dismiss="modal">開く</button>`
                 }},
                 { data: "displayName", render: val => {
                     return `<span class="trim-15">${val.substring(0, 40)}</span>`;
@@ -308,6 +315,32 @@ class UI {
                     return `${(((val / 1024 / 1024) * 10) | 0) / 10}MiB`;
                 }}
             ]
+        });
+        $("#files").on("click", "button", async e => {
+            let tr = ((target, tagName) => {
+                let e = target;
+                while (e instanceof HTMLElement) {
+                    if (e.tagName.toLowerCase() == tagName.toLowerCase())
+                        return e;
+                    e = e.parentNode;
+                }
+                return null;
+            })(e.target, "tr");
+            let data = $("#files").DataTable().data()[tr._DT_RowIndex];
+            
+            let form = new FormData();
+            form.append("token", UI.token);
+            form.append("bucket", data.bucket);
+            form.append("file", data.realName);
+
+            let res = await fetch("/api/storage/getFile", {
+                method: 'POST',
+                body: form
+            });
+            let viewer = Viewer.getDefault();
+            viewer.init();
+            viewer.add(await Book.fromBlob(await res.blob(), data.displayName));
+            await viewer.open();
         });
     }
 

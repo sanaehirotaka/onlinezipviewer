@@ -233,7 +233,7 @@ class Viewer {
             this.canvas.width = rect.width * scale;
             this.canvas.height = rect.height * scale;
             if (scale != 1) {
-                this.canvas.setAttribute("style", `zoom: ${1 / scale}`)
+                this.canvas.setAttribute("style", `transform: scale(${1 / scale})`)
             }
             this.context = this.canvas.getContext("2d");
         }

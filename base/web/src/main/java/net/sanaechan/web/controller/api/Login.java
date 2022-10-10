@@ -17,16 +17,16 @@ import net.sanaechan.storage.manager.workspace.Workspace;
 @RequestMapping(value = "/api/login")
 public class Login {
 
-	@PostMapping("getToken")
-	public Token index(@RequestParam("key") String key) throws IOException {
-		try (EncryptedConfig config = new EncryptedConfig(Path.of("./workspace"), key.toCharArray())) {
-			return new Token(Workspace.set(config.get(Workspace.class, Workspace::new)));
-		}
-	}
+    @PostMapping("getToken")
+    public Token index(@RequestParam("key") String key) throws IOException {
+        try (EncryptedConfig config = new EncryptedConfig(Path.of("./workspace"), key.toCharArray())) {
+            return new Token(Workspace.set(config.get(Workspace.class, Workspace::new)));
+        }
+    }
 
-	@Data
-	@AllArgsConstructor
-	public static class Token {
-		private String token;
-	}
+    @Data
+    @AllArgsConstructor
+    public static class Token {
+        private String token;
+    }
 }

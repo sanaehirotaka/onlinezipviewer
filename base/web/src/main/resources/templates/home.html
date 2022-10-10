@@ -1,98 +1,110 @@
 <!DOCTYPE html>
 <html lang="ja" xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://taisukef.github.io/zlib.js/bin/unzip.min.js"></script>
-
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs5/jq-3.6.0/dt-1.12.1/datatables.min.js"></script>
     <link href="/main.css" rel="stylesheet">
     <script src="/main.js"></script>
-	<title>Online Viewer</title>
+    <title>Online Viewer</title>
 </head>
 <body>
     <div id="viewer">
-    	<div class="viewer-menu">
-    		<nav class="navbar navbar-expand bg-light">
-				<div class="container-fluid">
-				  <div class="collapse navbar-collapse">
-				    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-				      <li class="nav-item dropdown">
-				        <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-				          本棚
-				        </a>
-				        <ul class="viewer-history dropdown-menu">
-				          	<li><a class="dropdown-item disabled" href="#">まだ本がありません</a></li>
-				        </ul>
-				      </li>
-				    </ul>
-				    <form class="d-flex">
-						<!-- 切り替えボタンの設定 -->
-						<button type="button" class="btn btn-primary" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
-						<!-- 切り替えボタンの設定 -->
-						<button type="button" class="btn btn-primary d-none" id="selectButton"data-bs-toggle="modal" data-bs-target="#selectModal">開く</button>
-				    </form>
-				  </div><!-- /.navbar-collapse -->
-				</div><!-- /.container-fluid -->
-			</nav>
-    	</div>
-   		<div class="viewer-progress progress">
-		  	<div class="progress-bar" role="progressbar"></div>
-   		</div>
-    	<div class="viewer-canvas-outer border">
-    		<canvas class="viewer-canvas"></canvas>
-    	</div>
+        <div class="viewer-menu">
+            <nav class="navbar navbar-expand bg-light">
+                <div class="container-fluid">
+                  <div class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                      <li class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          本棚
+                        </a>
+                        <ul class="viewer-history dropdown-menu">
+                              <li><a class="dropdown-item disabled" href="#">まだ本がありません</a></li>
+                        </ul>
+                      </li>
+                    </ul>
+                    <form class="d-flex">
+                        <!-- 切り替えボタンの設定 -->
+                        <button type="button" class="btn btn-primary" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
+                        <!-- 切り替えボタンの設定 -->
+                        <button type="button" class="btn btn-primary d-none" id="selectButton"data-bs-toggle="modal" data-bs-target="#selectModal">開く</button>
+                    </form>
+                  </div><!-- /.navbar-collapse -->
+                </div><!-- /.container-fluid -->
+            </nav>
+        </div>
+           <div class="viewer-progress progress">
+              <div class="progress-bar" role="progressbar"></div>
+           </div>
+        <div class="viewer-canvas-outer border">
+            <canvas class="viewer-canvas"></canvas>
+        </div>
     </div>
 
-	<!-- モーダルの設定 -->
-	<div class="modal fade" id="loginModal" tabindex="-1">
-		<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-			<div class="modal-content">
-			<div class="modal-header">
-				<h1 class="modal-title fs-5">ログイン</h1>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-			<div class="modal-body">
-				<p>ログイン</p>
-				<form class="form-inline" id="loginForm" action="#">
-					<input type="password" name="key" class="form-control me-2">
-				</form>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-				<button type="button" class="btn btn-primary" id="login" data-bs-dismiss="modal">ログイン</button>
-			</div><!-- /.modal-footer -->
-			</div><!-- /.modal-content -->
-		</div><!-- /.modal-dialog -->
-	</div><!-- /.modal -->
-	<!-- モーダルの設定 -->
-	<div class="modal fade" id="selectModal" tabindex="-1">
-		<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-			<div class="modal-content">
-			<div class="modal-header">
-				<h1 class="modal-title fs-5">開く</h1>
-				<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-			</div>
-			<div class="modal-body">
-				<div class="row g-3">
-					<div class="col-auto">
-						<label for="bucketSelect" class="form-label">バケットの選択</label>
-					</div>
-					<div class="col-auto">
-						<select class="form-select" id="bucketSelect">
-						</select>
-					</div>
-					<div class="col-auto">
-						<button class="btn btn-primary mb-3">開く</button>
-					</div>
-				</div>
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-			</div><!-- /.modal-footer -->
-			</div><!-- /.modal-content -->
-		</div><!-- /.modal-dialog -->
-	</div><!-- /.modal -->
+    <!-- モーダルの設定 -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">ログイン</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>ログイン</p>
+                <form class="form-inline" id="loginForm" action="#">
+                    <input type="password" name="key" class="form-control me-2">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-primary" id="login" data-bs-dismiss="modal">ログイン</button>
+            </div><!-- /.modal-footer -->
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!-- モーダルの設定 -->
+    <div class="modal fade" id="selectModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5">開く</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <label for="bucketSelect" class="form-label">バケットの選択</label>
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select" id="bucketSelect">
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary mb-3" id="openbucket">開く</button>
+                    </div>
+                </div>
+                <div class="row">
+                    <table id="files">
+                        <thead>
+                            <tr>
+                                <th>-</th>
+                                <th>名前</th>
+                                <th>サイズ</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+            </div><!-- /.modal-footer -->
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 </body>
 </html>

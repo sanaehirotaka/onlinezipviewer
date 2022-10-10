@@ -21,7 +21,7 @@ import net.sanaechan.storage.manager.storage.BucketConfig;
 @Data
 public class Workspace {
 
-	private static final Map<String, Workspace> map = new HashMap<>();
+    private static final Map<String, Workspace> map = new HashMap<>();
 
     private long timestamp;
 
@@ -48,13 +48,13 @@ public class Workspace {
     }
 
     public static String set(Workspace current) {
-    	SecureRandom rng = new SecureRandom();
-    	byte[] bytes = new byte[32];
-    	rng.nextBytes(bytes);
-    	String key = Base64.getUrlEncoder().encodeToString(bytes).replaceAll("=", "");
-    	map.clear();
-    	map.put(key, current);
-    	return key;
+        SecureRandom rng = new SecureRandom();
+        byte[] bytes = new byte[32];
+        rng.nextBytes(bytes);
+        String key = Base64.getUrlEncoder().encodeToString(bytes).replaceAll("=", "");
+        map.clear();
+        map.put(key, current);
+        return key;
     }
 
     public static Path tempDirEncrypted(Workspace workspace) throws IOException {

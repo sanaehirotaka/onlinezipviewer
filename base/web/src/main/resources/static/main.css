@@ -1,18 +1,28 @@
 @charset "UTF-8";
 
+:root {
+    font-size: 0.9rem;
+}
 
 #viewer {
-	user-select: none;
-	display: flex;
-	flex-direction: column;
-	height: 100vh;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
 
 .viewer-progress {
-	height: 0.2rem;
+    height: 0.2rem;
 }
 
 .viewer-canvas-outer {
-	flex: 1;
-	overflow: hidden;
+    flex: 1;
+    overflow: hidden;
+}
+.trim-15 {
+    display: inline-block;
+    max-width: 15rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }

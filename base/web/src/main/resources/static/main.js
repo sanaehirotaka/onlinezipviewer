@@ -33,13 +33,15 @@ class Book {
     static async fromBlob(blob, name) {
         let book = new Book();
         book.name = name;
-        book.content = Tools.fileToUint8Array(blob);
+        book.content = await Tools.fileToUint8Array(blob);
         return book;
     }
 
     async open() {
         this.unzip = new Zlib.Unzip(this.content);
-        this.files = this.unzip.getFilenames();
+        this.files = Array.from(this.unzip.getFilenames())
+            .filter(f => f.endsWith(".jpg") || f.endsWith(".jpeg") || f.endsWith(".png") || f.endsWith(".gif") || f.endsWith(".webp"))
+            .sort();
         this.index = -1;
     }
 
@@ -223,11 +225,16 @@ class Viewer {
             return;
         }
 
+        let scale = window.devicePixelRatio;
+
         let blob = new Blob([page], { type: "application/octet-binary" });
         let rect = this.canvas.parentNode.getBoundingClientRect();
-        if (this.canvas.width != parseInt(rect.width) || this.canvas.height != parseInt(rect.height)) {
-            this.canvas.width = rect.width;
-            this.canvas.height = rect.height;
+        if (this.canvas.width != parseInt(rect.width * scale) || this.canvas.height != parseInt(rect.height * scale)) {
+            this.canvas.width = rect.width * scale;
+            this.canvas.height = rect.height * scale;
+            if (scale != 1) {
+                this.canvas.setAttribute("style", `zoom: ${1 / scale}`)
+            }
             this.context = this.canvas.getContext("2d");
         }
         if (!this.context) {

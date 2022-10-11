@@ -75,6 +75,7 @@ class Viewer {
     canvas;
     context;
     book;
+    currentBitmap;
 
     static fromSelector(selector) {
         return new Viewer(() => document.querySelector(selector));
@@ -116,6 +117,20 @@ class Viewer {
         }
     }
 
+    keyEvent(e) {
+        switch (e.key) {
+            case 'ArrowDown':
+            case 'ArrowRight':
+                this.next();
+                break;
+            case 'ArrowUp':
+            case 'ArrowLeft':
+                this.previous();
+                break;
+            default:
+        }
+    }
+
     async open(book) {
         if (this.book) {
             this.book.close();
@@ -138,6 +153,7 @@ class Viewer {
             this.book.close();
         }
         this.book = null;
+        this.currentBitmap = null;
         this.title();
         await this.write(null);
         this.progress();
@@ -216,18 +232,9 @@ class Viewer {
         }
     }
 
-    async write(page) {
-        if (!page) {
-            if (this.canvas) {
-                let ctx = this.canvas.getContext("2d");
-                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-            return;
-        }
-
+    adjust() {
         let scale = window.devicePixelRatio;
 
-        let blob = new Blob([page], { type: "application/octet-binary" });
         let rect = this.canvas.parentNode.getBoundingClientRect();
         if (this.canvas.width != parseInt(rect.width * scale) || this.canvas.height != parseInt(rect.height * scale)) {
             this.canvas.width = rect.width * scale;
@@ -237,28 +244,48 @@ class Viewer {
             }
             this.context = this.canvas.getContext("2d");
         }
-        if (!this.context) {
-            this.context = this.canvas.getContext("2d");
+    }
+
+    async write(page) {
+        if (!page) {
+            if (this.canvas) {
+                let ctx = this.canvas.getContext("2d");
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            return;
         }
         try {
+            let blob = new Blob([page], { type: "application/octet-binary" });
             let bitmap = await createImageBitmap(blob);
-
-            let zoom = Math.min(this.canvas.width / bitmap.width, this.canvas.height / bitmap.height);
-
-            let width = zoom * bitmap.width;
-            let height = zoom * bitmap.height;
-            let startX = (this.canvas.width - width) / 2;
-            let startY = (this.canvas.height - height) / 2;
-
-            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.context.drawImage(bitmap, startX, startY, width, height);
-
+            this.currentBitmap = bitmap;
+            this.writeBitmap(bitmap);
         } catch (ex) {
+            if (!this.context) {
+                this.context = this.canvas.getContext("2d");
+            }
             this.context.font = '18px sans-serif';
             this.context.fillStyle = "red";
             this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.context.fillText(ex.toString(), 2, 32);
         }
+    }
+
+    rewrite() {
+        if (this.currentBitmap)
+            this.writeBitmap(this.currentBitmap);
+    }
+
+    writeBitmap(bitmap) {
+        this.adjust();
+        let zoom = Math.min(this.canvas.width / bitmap.width, this.canvas.height / bitmap.height);
+
+        let width = zoom * bitmap.width;
+        let height = zoom * bitmap.height;
+        let startX = (this.canvas.width - width) / 2;
+        let startY = (this.canvas.height - height) / 2;
+
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.drawImage(bitmap, startX, startY, width, height);
     }
 }
 
@@ -270,6 +297,8 @@ class Events {
         window.addEventListener("dragenter", Events.dragenter);
         window.addEventListener("dragover", Events.dragover);
         window.addEventListener("drop", Events.drop);
+        window.addEventListener("resize", Events.resize);
+        window.addEventListener("keydown", Events.keydown);
     }
     static loaded(e) {
         Viewer.getDefault().init();
@@ -295,6 +324,27 @@ class Events {
         }
         await viewer.open();
     }
+    static resize(e) {
+        let viewer = Viewer.getDefault();
+        viewer.rewrite();
+    }
+    static keydown(e) {
+        switch (e.key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'ArrowLeft':
+            case 'ArrowRight':
+                break;
+            default:
+                // 方向キー以外
+                return;
+        }
+        if (document.activeElement && document.activeElement != document.body)
+            return;
+        
+        let viewer = Viewer.getDefault();
+        viewer.keyEvent(e);
+    }
 }
 class UI {
 
@@ -309,8 +359,9 @@ class UI {
         document.querySelector("#selectModal").addEventListener("show.bs.modal", UI.selectInit, {"once": true});
         document.querySelector("#openbucket").addEventListener("click", UI.openbucket);
         $("#files").DataTable({
-            order: false,
-            search: { smart : false },
+            searching: false,
+            ordering: false,
+            info: true,
             columns: [
                 { data: "realName", render: val => {
                     return `<button class="btn btn-primary" data-bs-dismiss="modal">開く</button>`
@@ -354,7 +405,7 @@ class UI {
     static loginOK() {
         document.querySelector("#loginButton").classList.add("d-none");
         document.querySelector("#selectButton").classList.remove("d-none");
-
+        new bootstrap.Toast(document.querySelector("#loginSuccessToast"), {delay: 3000}).show()
     }
 
     static loginNG() {
@@ -363,6 +414,7 @@ class UI {
         document.querySelector("#loginButton").classList.add("btn-warning");
         document.querySelector("#selectButton").classList.add("d-none");
         UI.token = null;
+        new bootstrap.Toast(document.querySelector("#loginFailToast"), {delay: 3000}).show()
     }
 
     static async login(e) {
@@ -371,8 +423,13 @@ class UI {
             body: new FormData(document.querySelector("#loginForm"))
         });
         if (res.ok) {
-            UI.loginOK();
-            UI.token = (await res.json()).token;
+            let json = await res.json();
+            if (json.success) {
+                UI.loginOK();
+                UI.token = json.token;
+            } else {
+                UI.loginNG();
+            }
         } else {
             UI.loginNG();
         }
@@ -388,12 +445,17 @@ class UI {
         });
 
         if (res.ok) {
-            let sel = document.querySelector("#bucketSelect");
-            for (let bucket of await res.json()) {
-                let op = document.createElement("option");
-                op.setAttribute("value", bucket);
-                op.appendChild(document.createTextNode(bucket));
-                sel.appendChild(op);
+            let json = await res.json();
+            if (json.success) {
+                let sel = document.querySelector("#bucketSelect");
+                for (let bucket of json.bukets) {
+                    let op = document.createElement("option");
+                    op.setAttribute("value", bucket);
+                    op.appendChild(document.createTextNode(bucket));
+                    sel.appendChild(op);
+                }
+            } else {
+                UI.loginNG();
             }
         } else {
             UI.loginNG();
@@ -411,10 +473,15 @@ class UI {
         });
 
         if (res.ok) {
-            let dt = $("#files").DataTable();
-            dt.clear().draw();
-            dt.rows.add(await res.json());
-            dt.columns.adjust().draw();
+            let json = await res.json();
+            if (json.success) {
+                let dt = $("#files").DataTable();
+                dt.clear().draw();
+                dt.rows.add(json.files);
+                dt.columns.adjust().draw();
+            } else {
+                UI.loginNG();
+            }
         } else {
             UI.loginNG();
         }

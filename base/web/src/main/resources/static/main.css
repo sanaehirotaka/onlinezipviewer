@@ -34,3 +34,6 @@ html {
     text-overflow: ellipsis;
     overflow: hidden;
 }
+table {
+    width: 100%;
+}

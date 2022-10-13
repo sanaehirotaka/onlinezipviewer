@@ -240,7 +240,7 @@ class Viewer {
             this.canvas.width = rect.width * scale;
             this.canvas.height = rect.height * scale;
             if (scale != 1) {
-                this.canvas.setAttribute("style", `transform: scale(${1 / scale})`)
+                this.canvas.setAttribute("style", `zoom: ${1 / scale}`)
             }
             this.context = this.canvas.getContext("2d");
         }
@@ -341,7 +341,7 @@ class Events {
         }
         if (document.activeElement && document.activeElement != document.body)
             return;
-        
+
         let viewer = Viewer.getDefault();
         viewer.keyEvent(e);
     }
@@ -385,7 +385,7 @@ class UI {
                 return null;
             })(e.target, "tr");
             let data = $("#files").DataTable().data()[tr._DT_RowIndex];
-            
+
             let form = new FormData();
             form.append("token", UI.token);
             form.append("bucket", data.bucket);
